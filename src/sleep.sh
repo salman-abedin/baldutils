@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# Usage: sleep <Seconds>
 # Note: Can't be used on a subshell
 
 CURRENT_TTY_SETTINGS=$(stty -g)
