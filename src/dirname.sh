@@ -1,5 +1,7 @@
 #!/bin/sh
+#
+# Usage: dirname FILE ...
 
 for file in "$@"; do
-    echo "${file%/*}/"
+   echo "${file%/*}/"
 done
