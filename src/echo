@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# 'echo' is such a portability nightmare
+# This throws in a -j option for json string keypairs
+
+case "${1}" in
+    (-e)
+        case "${2}" in
+            (-n)      shift 2; printf -- '%b' "${*}" ;;
+            (*)       shift; printf -- '%b\n' "${*}" ;;
+        esac
+    ;;
+    (-E)
+        case "${2}" in
+            (-n)      shift 2; printf -- '%s' "${*}" ;;
+            (*)       shift; printf -- '%s\n' "${*}" ;;
+        esac
+    ;;
+    (-j)              shift; printf -- '{"%s": "%s"}\n' "${1}" "${2}" ;;
+    (-n)
+        case "${2}" in
+            (-e)      shift 2; printf -- '%b' "${*}" ;;
+            (-E)      shift 2; printf -- '%s' "${*}" ;;
+            (*)       shift; printf -- '%s' "${*}" ;;
+        esac
+    ;;
+    (-en|-ne)         shift; printf -- '%b' "${*}" ;;
+    (-En|-nE)         shift; printf -- '%s' "${*}" ;;
+    (*)               printf -- '%s\n' "${*}" ;;
+esac
