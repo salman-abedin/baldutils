@@ -13,6 +13,9 @@ else
   [ "${#}" -ge 1 ] && shift 1
 fi
 
+# If lines equals 0, then don't process further
+[ "${lines}" -eq 0 ] && exit 0
+
 # Test whether we have further params i.e. files to parse
 if [ "${#}" -gt 0 ]; then
     for param in "${@}"; do
