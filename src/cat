@@ -1,9 +1,11 @@
 #!/bin/sh
 #
 # Usage: cat FILE ...
+#
+# Note: This adds a newline to lines that might not have a newline
 
-for file in "$@"; do
-   while IFS= read -r line; do
-      echo "$line"
-   done < "$file"
+for file in "${@}"; do
+   while IFS= read -r line || [ "${line}" ]; do
+      printf -- '%s\n' "${line}"
+   done < "${file}"
 done
