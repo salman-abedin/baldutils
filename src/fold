@@ -1,9 +1,16 @@
 #!/bin/sh
 # A POSIX sh implementation of 'fold'
 
+# Define the path to our function library
+SH_LIBPATH=
+
+# Import our library of functions
+# shellcheck disable=SC1090
+. "${SH_LIBPATH:-.}"/common_functions.sh || exit 1
+
 # We use this function to generate a string of repeated [char], length [n]
-# Usage: str_repeat [char(default:#)] [n(default:80)]
-str_repeat() {
+# Usage: char_repeat [char(default:#)] [n(default:80)]
+char_repeat() {
   i=0
   until [ "${i}" -eq "${2:-80}" ]; do
     printf -- '%s' "${1:-#}"
@@ -25,13 +32,11 @@ while getopts ":bhsw:" arg; do
       if [ "${OPTARG}" -eq "${OPTARG}" ]; then
         width="${OPTARG}"
       else
-        printf -- '%s\n' "'${OPTARG}' does not appear to be a number" >&2
-        exit 1
+        die "'${OPTARG}' does not appear to be a number"
       fi
     ;;
     (:)
-      printf -- '%s\n' "Option '-${arg}' requires an argument." >&2
-      exit 1
+      die "Option '-${arg}' requires an argument."
     ;;
     (h|\?|*)
       : # TO-DO: output usage information here
@@ -66,9 +71,9 @@ if [ -r "${1}" ]; then
         # i.e. 100 chars - 80 = 20 chars that need to be sliced off
         line_cut=$(( line_length - width ))
         # Using the above, we print our line to the maximum width
-        printf -- '%s\n' "${line%$(str_repeat "?" "$line_cut")}"
+        printf -- '%s\n' "${line%$(char_repeat "?" "$line_cut")}"
         # Now we remove what we've just printed
-        line="${line#$(str_repeat "?" "$width")}"
+        line="${line#$(char_repeat "?" "$width")}"
         # Next, we update the line length
         line_length="${#line}"
       done
@@ -85,8 +90,8 @@ else
     else
       while [ "${line_length}" -ge "${width}" ]; do
         line_cut=$(( line_length - width ))
-        printf -- '%s\n' "${line%$(str_repeat "?" "$line_cut")}"
-        line="${line#$(str_repeat "?" "$width")}"
+        printf -- '%s\n' "${line%$(char_repeat "?" "$line_cut")}"
+        line="${line#$(char_repeat "?" "$width")}"
         line_length="${#line}"
       done
       printf -- '%s\n' "${line}"
