@@ -28,6 +28,9 @@ if [ "${start}" -lt "${end}" ]; then
     printf -- '%d\n' "${start}"
     start=$(( start + incr ))
   done
+# This replicates 'seq's behaviour in this scenario
+elif [ "${start}" -eq "${end}" ]; then
+  printf -- '%d\n' "${start}"
 # or... undocumented feature: descending order!
 elif [ "${start}" -gt "${end}" ]; then
   while [ "${start}" -ge "${end}" ]; do
