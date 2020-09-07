@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# POSIX shell variant of 'seq' command
+#
+# Derived from:
+# https://raw.githubusercontent.com/rawiriblundell/dotfiles/master/.bashrc
+
+case "${#}" in
+  (1) start=1; incr=1; end="${1}" ;;
+  (2) start="${1}"; incr=1; end="${2}" ;;
+  (3) start="${1}"; incr="${2}"; end="${3}" ;;
+  (*)
+    printf -- '%s\n' "Usage:"
+    printf -- '\t%s\n'  "seq LAST" \
+      "seq FIRST LAST" \
+      "seq FIRST INCR LAST" \
+      "Note: This is a POSIX sh script to provide the basic functionality of the command 'seq'."
+    exit 0
+  ;;
+esac
+
+# Validations go here, starting with: increment cannot be 0
+[ "${incr}" -eq "0" ] && exit 1
+
+# Now, simply iterate through in ascending order
+if [ "${start}" -lt "${end}" ]; then
+  while [ "${start}" -le "${end}" ]; do
+    printf -- '%d\n' "${start}"
+    start=$(( start + incr ))
+  done
+# or... undocumented feature: descending order!
+elif [ "${start}" -gt "${end}" ]; then
+  while [ "${start}" -ge "${end}" ]; do
+    printf -- '%d\n' "${start}"
+    start=$(( start - incr ))
+  done
+fi
