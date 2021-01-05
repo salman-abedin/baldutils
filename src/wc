@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Forked from https://github.com/dylanaraps/pure-sh-bible#get-the-number-of-lines-in-a-file
+# Usage: cmd | wc -l
+
+usage() {
+    printf -- '%s\n' "Usage: cmd | wc, wc < file, wc file" >&2
+    exit "${1:-0}"
+}
+
+# Test whether we have text coming in from stdin 
+if [ ! -t 0 ]; then
+    lines=0
+    while IFS= read -r line || [ -n "${line}" ]; do
+       lines=$((lines+1))
+    done
+    printf -- '%d\n' "${lines}"
+# Otherwise, there should be a file in the positional parameters
+else
+    [ "${#}" -eq "0" ] && usage 1
+    parsed_files=0
+    total_lines=0
+    for param in "${@}"; do
+        [ "${param}" = "-h" ] && usage 0
+        [ "${param}" = "--help" ] && usage 0
+        if [ -r "${param}" ]; then
+            parsed_files=$((parsed_files+1))
+            lines=0
+            while IFS= read -r line || [ -n "${line}" ]; do
+                lines=$((lines+1))
+                total_lines=$((total_lines+1))
+            done < "${param}"
+            printf -- '%4d %s\n' "${lines}" "${param}"
+        else
+          shift 1
+        fi
+    done
+    if [ "${parsed_files}" -gt "1" ]; then
+        printf -- '%4s %s\n' "${total_lines}" "total"
+    fi
+fi

@@ -1,0 +1,100 @@
+#!/bin/sh
+# A POSIX sh implementation of 'fold'
+
+# Define the path to our function library
+SH_LIBPATH=
+
+# Import our library of functions
+# shellcheck disable=SC1090
+. "${SH_LIBPATH:-.}"/common_functions.sh || exit 1
+
+# We use this function to generate a string of repeated [char], length [n]
+# Usage: char_repeat [char(default:#)] [n(default:80)]
+char_repeat() {
+  i=0
+  until [ "${i}" -eq "${2:-80}" ]; do
+    printf -- '%s' "${1:-#}"
+    i=$(( i + 1 ))
+  done
+  printf -- '%s\n' ""
+  unset -v i
+}
+
+while getopts ":bhsw:" arg; do
+  case "${arg}" in
+    (b)
+      : # Dummy action, count bytes rather than columns
+    ;;
+    (s)
+      : # Dummy action, break at spaces within $width
+    ;;
+    (w)
+      if [ "${OPTARG}" -eq "${OPTARG}" ]; then
+        width="${OPTARG}"
+      else
+        die "'${OPTARG}' does not appear to be a number"
+      fi
+    ;;
+    (:)
+      die "Option '-${arg}' requires an argument."
+    ;;
+    (h|\?|*)
+      : # TO-DO: output usage information here
+      exit 0
+    ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+# If width is not defined, default it to 80 columns
+: "${width:-80}"
+
+# Check for a parameter (i.e. a file) to parse
+if [ -r "${1}" ]; then
+  # Read in a line
+  while IFS= read -r line; do
+    # Figure out the line length
+    line_length="${#line}"
+
+    # If the line length is less/equal to width, then simply print it
+    if [ "${line_length}" -le "${width}" ]; then
+      printf -- '%s\n' "${line}"
+    # Otherwise, we need to slice up the input.  How this works:
+    # Let's say we have a line that's 10 chars long and we're wrapping to 1 char
+    # line=0123456789
+    # "${line%?????????}" # Removes 9 last chars ----> 0
+    # "${line#?}"         # Removes 1 leading char --> 123456789
+    # We then cycle through slices of the line until we're done
+    else
+      while [ "${line_length}" -ge "${width}" ]; do
+        # Cutoff is line length - desired width
+        # i.e. 100 chars - 80 = 20 chars that need to be sliced off
+        line_cut=$(( line_length - width ))
+        # Using the above, we print our line to the maximum width
+        printf -- '%s\n' "${line%$(char_repeat "?" "$line_cut")}"
+        # Now we remove what we've just printed
+        line="${line#$(char_repeat "?" "$width")}"
+        # Next, we update the line length
+        line_length="${#line}"
+      done
+      # Once we're out of that loop, we emit what's left
+      printf -- '%s\n' "${line}"
+    fi
+  done < "${1}"
+# Otherwise, switch to stdin handling.
+else
+  while IFS= read -r line; do
+    line_length="${#line}"
+    if [ "${line_length}" -le "${width}" ]; then
+      printf -- '%s\n' "${line}"
+    else
+      while [ "${line_length}" -ge "${width}" ]; do
+        line_cut=$(( line_length - width ))
+        printf -- '%s\n' "${line%$(char_repeat "?" "$line_cut")}"
+        line="${line#$(char_repeat "?" "$width")}"
+        line_length="${#line}"
+      done
+      printf -- '%s\n' "${line}"
+    fi
+  done
+fi

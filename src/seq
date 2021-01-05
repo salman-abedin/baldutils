@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# POSIX shell variant of 'seq' command
+#
+# Derived from:
+# https://raw.githubusercontent.com/rawiriblundell/dotfiles/master/.bashrc
+
+err_exit() {
+cat <<EOF
+NAME
+    seq - print a sequence of numbers
+
+SYNOPSIS
+    seq LAST
+    seq FIRST LAST
+    seq FIRST INCREMENT LAST
+
+DESCRIPTION
+    Print numbers from FIRST to LAST, in steps of INCREMENT.
+
+Note: This POSIX sh script provides a basic version of the command 'seq'.
+EOF
+exit "${1:-0}"
+}
+
+# Count and assign our parameters, or fail out
+case "${#}" in
+  (1) start=1; incr=1; end="${1}" ;;
+  (2) start="${1}"; incr=1; end="${2}" ;;
+  (3) start="${1}"; incr="${2}"; end="${3}" ;;
+  (*) err_exit ;;
+esac
+
+# Validations go here, starting with checking out inputs are integers
+[ "${start}" -eq "${start}" ] 2>/dev/null || err_exit 1
+[ "${incr}" -eq "${incr}" ] 2>/dev/null || err_exit 1
+[ "${end}" -eq "${end}" ] 2>/dev/null || err_exit 1
+
+# Increment cannot be 0
+[ "${incr}" -eq "0" ] && err_exit 1
+
+# Now, simply iterate through in ascending order
+if [ "${start}" -lt "${end}" ]; then
+  while [ "${start}" -le "${end}" ]; do
+    printf -- '%d\n' "${start}"
+    start=$(( start + incr ))
+  done
+# If start and end are the same, print it out.
+# This replicates 'seq's behaviour in this scenario
+elif [ "${start}" -eq "${end}" ]; then
+  printf -- '%d\n' "${start}"
+# or... undocumented feature: descending order!
+elif [ "${start}" -gt "${end}" ]; then
+  while [ "${start}" -ge "${end}" ]; do
+    printf -- '%d\n' "${start}"
+    start=$(( start - incr ))
+  done
+fi
+
+exit 0

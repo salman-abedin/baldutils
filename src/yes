@@ -1,0 +1,5 @@
+#!/bin/sh
+
+while :; do
+    printf -- '%s\n' "${1:-y}"
+done

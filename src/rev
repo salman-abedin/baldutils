@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# POSIX shell variant of 'rev' command
+#
+# Derived from:
+# https://raw.githubusercontent.com/rawiriblundell/dotfiles/master/.bashrc
+
+# Define the path to our function library
+SH_LIBPATH=
+
+# Import our library of functions
+# shellcheck disable=SC1090
+. "${SH_LIBPATH:-.}"/common_functions.sh || exit 1
+
+# Let's say we have a line that's 10 chars long and we want the 8th char
+# line=0123456789
+# line="${line#????????}"      # Removes 8 leading chars--> 89
+# line="${line%?}"             # Removes 1 last chars ----> 8
+# By adjusting the numbers of '?'s, we can select specific chars
+# $1 = string, $2 = offset, (optional: $3 = length)
+str_offset() {
+  _in_line="${1}"
+  _out_offset="${2:?Offset not defined}"
+  [ "${_out_offset}" -lt "0" ] && return 1
+
+  _offset=''
+  until [ "${#_offset}" -eq "${_out_offset}" ]; do
+    _offset="?${_offset}"
+  done
+
+  _out_line="${_in_line#$_offset}"
+
+  if [ "${3+x}" = "x" ] && [ "${#3}" -gt "0" ]; then
+    _out_length="${3}"
+    _target=$(( "${#_out_line}" - _out_length ))
+
+    until [ "${#_length}" -eq "${_target}" ]; do
+      _length="?${_length}"
+    done
+
+    [ "${_out_length}" -le "0" ] && exit
+
+    _out_line="${_out_line%$_length}"
+  fi
+
+  printf -- '%s\n' "${_out_line}"
+  unset -v _in_line _out_offset _offset _out_line _out_length _length _target
+}
+
+# Check that stdin or $1 isn't empty
+if [ -t 0 ] && [ -z "${1}" ]; then
+  printf -- '%s\n' "Usage:  rev string|file" ""
+  printf -- '\t%s\n'  "Reverse the order of characters in STRING or FILE." "" \
+    "With no STRING or FILE, read standard input instead." "" \
+    "Note: This is a POSIX sh script to provide the basic functionality of the command 'rev'"
+  exit 0
+# Disallow both piping in strings and declaring strings
+elif [ ! -t 0 ] && [ -n "${1}" ]; then
+  die "[ERROR]: Please select either piping in or declaring a string to reverse, not both."
+fi
+
+# If parameter is a file, or stdin in used, action that first
+if [ -r "${1}" ]||[ ! -t 0 ]; then
+  while IFS= read -r line; do
+    len="${#line}"
+    i=$(( len - 1 ))
+    rev=''
+    while [ "${i}" -ge "0" ]; do
+      rev="${rev}$(str_offset "${line}" "${i}" 1)"
+      i=$(( i - 1 ))
+    done
+    printf -- '%s\n' "${rev}"
+  done < "${1}"
+# Otherwise, if parameter exists, action that
+elif [ -n "${*}" ]; then
+  line=${*}
+  len="${#line}"
+  i=$(( len - 1 ))
+  rev=''
+  while [ "${i}" -ge "0" ]; do
+    rev="${rev}$(str_offset "${line}" "${i}" 1)"
+    i=$(( i - 1 ))
+  done
+  printf -- '%s\n' "${rev}"
+fi

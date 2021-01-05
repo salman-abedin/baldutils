@@ -1,0 +1,10 @@
+#!/bin/sh
+needle="${1:?No search term given}"
+count=1
+
+while IFS="$(printf '\n')" read -r line; do
+  case "${line}" in
+    (*"${needle}"*) printf -- '%04d: %s\n' "${count}" "${line}" ;;
+  esac
+  count=$(( count + 1 ))
+done < "${2:-/dev/stdin}"
